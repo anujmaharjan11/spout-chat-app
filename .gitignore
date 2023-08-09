@@ -43,6 +43,13 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-.id_rsa/
-.id_rsa.pub/
+id_rsa
+id_rsa.pub
+
+.fvm/
+
+git-cola/
+
+pubspec.lock
+
 
