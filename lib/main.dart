@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               )
             : null,
-        body: auth.currentUser == null ? const Login() : const ChatHome()
+        body: auth.currentUser == null ? const Login() : const ChatProvider()
 
         // Column(
         //   mainAxisAlignment: MainAxisAlignment.center,

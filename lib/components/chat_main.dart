@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 class ChatMain extends StatefulWidget {
   final UserModel user;
   final FirebaseAuth auth;
+
   final String combinedId;
 
   const ChatMain(
@@ -20,18 +21,12 @@ class ChatMain extends StatefulWidget {
 
 class _ChatMainState extends State<ChatMain> {
   List? messages;
-  late final TextEditingController? _controller = TextEditingController();
+  late final TextEditingController _controller = TextEditingController();
   late FirebaseFirestore firestore = FirebaseFirestore.instance;
-
   bool? isChatEnded = false;
   Timestamp? endedAt;
 
-  void initState() {
-    super.initState();
-    print("chatDocumentId: ${widget.combinedId.length}");
-  }
-
-  Stream<List> fetchMessagesStream() {
+  Stream<List>? fetchMessagesStream() {
     return firestore
         .collection('chats')
         .doc(widget.combinedId)
@@ -39,7 +34,6 @@ class _ChatMainState extends State<ChatMain> {
         .map((snapshot) {
       Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
       endedAt = data['endedAt'];
-
       return data['messages'] ?? [];
     });
   }
@@ -49,7 +43,7 @@ class _ChatMainState extends State<ChatMain> {
       "messages": FieldValue.arrayUnion([
         {
           "id": UniqueKey().hashCode.toString(),
-          "text": _controller?.text.trim(),
+          "text": _controller.text.trim(),
           "senderId": widget.auth.currentUser!.uid,
           "receiverId": widget.user.id,
           "date": DateTime.now()
@@ -57,13 +51,12 @@ class _ChatMainState extends State<ChatMain> {
       ])
     });
 
-    _controller?.clear();
+    _controller.clear();
   }
 
   @override
   void dispose() {
-    // Don't forget to dispose of the TextEditingController when the widget is disposed.
-    _controller?.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -125,7 +118,12 @@ class _ChatMainState extends State<ChatMain> {
             ),
           ),
         ),
-        body: Container(
+        body:
+            // BlocBuilder<ChatSessionBloc, ChatSessionState>(
+            //     bloc: widget.bloc,
+            //     builder: (BuildContext context, state) {
+            //       return
+            Container(
           color: Colors.black12,
           child: StreamBuilder<List>(
               stream: fetchMessagesStream(),
@@ -147,7 +145,7 @@ class _ChatMainState extends State<ChatMain> {
                 }
 
                 if (endedAt != null) {
-                  return  Center(
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -155,7 +153,6 @@ class _ChatMainState extends State<ChatMain> {
                           "Your chat session has ended.",
                           style: TextStyle(fontSize: 20),
                         ),
-
                         TextButton(
                           onPressed: () {
                             Navigator.pop(context);
@@ -168,15 +165,14 @@ class _ChatMainState extends State<ChatMain> {
                             ),
                           ),
                           child: const Text('New session'),
-                        ),                      ],
+                        ),
+                      ],
                     ),
                   );
                 }
 
                 if (snapshot.hasData) {
-
                   final data = snapshot.data;
-
                   return Column(
                     children: [
                       Expanded(
@@ -296,33 +292,38 @@ class _ChatMainState extends State<ChatMain> {
         ));
   }
 
+  //   );
+  // }
+
   void _showDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Attention'),
-          content:  Text(endedAt == null ?
-              'Do you want to close this session with Jeevee Admin.' : "Your session with the admin has been already closed."),
+          content: Text(endedAt == null
+              ? 'Do you want to close this session with Jeevee Admin.'
+              : "Your session with the admin has been already closed."),
           actions: <Widget>[
-            endedAt == null ?
-            Row(
-              children: [
-                TextButton(
-                  child: const Text('Close'),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close the dialog
-                  },
-                ),
-                TextButton(
-                  child: const Text('Confirm'),
-                  onPressed: () async {
-                    updateSessionId();
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            ) :const SizedBox.shrink()
+            endedAt == null
+                ? Row(
+                    children: [
+                      TextButton(
+                        child: const Text('Close'),
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close the dialog
+                        },
+                      ),
+                      TextButton(
+                        child: const Text('Confirm'),
+                        onPressed: () async {
+                          updateSessionId();
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink()
           ],
         );
       },
